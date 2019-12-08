@@ -1,0 +1,18 @@
+support both
+    fixed minimum node size
+    fixed maximum node size
+
+support items being in multiple nodes
+    areas, not just points
+
+use std::deque rather than vector for being able to insert and remove quickly in the middle
+    would have to be very careful with ids
+    it's ~20% slower for insertions only
+
+avoid fragmentation in the vectors
+
+different storage for leaf nodes and internal nodes
+    they store different things
+
+1m inserts in 0.88s
+updates could be much faster
