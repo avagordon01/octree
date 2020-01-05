@@ -2,9 +2,6 @@
 
 set -eu
 
-run_date=$(date +'%Y-%m-%d %H:%M:%S')
-
-meson setup out --reconfigure
-ninja test -C out || true
-
-bash -c "coredumpctl list --quiet --no-legend --no-pager --since='${run_date}'"
+meson setup out --reconfigure || meson setup out
+ninja -C out
+gdb -ex run --args ./out/t

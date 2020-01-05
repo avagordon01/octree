@@ -1,10 +1,13 @@
 #include <vector>
 #include <array>
+#include <optional>
+#include <unordered_map>
 #include <cassert>
 #include <cstdint>
 #include <cstdbool>
 #include <type_traits>
 #include <ostream>
+#include <iostream>
 
 namespace tree {
 
@@ -28,13 +31,13 @@ struct tree {
                 if (p[i] < min[i] || p[i] >= max[i])
                     return false;
             return true;
-        };
+        }
         bool overlaps(area a) {
             for (size_t i = 0; i < Dimension; i++)
                 if (a.max[i] < min[i] || a.min[i] > max[i])
                     return false;
             return true;
-        };
+        }
         area child(size_t child_index) {
             area child = *this;
             Coord half_sidelength = (max[0] - min[0]) / 2;
@@ -42,13 +45,21 @@ struct tree {
                 child.max[i] -= half_sidelength;
             }
             for (size_t i = 0; i < Dimension; i++) {
-                if (((child_index >> i) & 1) == 1) {
-                    child.min[i] += half_sidelength;
-                    child.max[i] += half_sidelength;
-                }
+                bool b = (child_index >> i) & 1;
+                child.min[i] += b * half_sidelength;
+                child.max[i] += b * half_sidelength;
             }
             return child;
-        };
+        }
+        std::pair<area, node_id> child(Position position) {
+            for (size_t i = 0; i < num_child_nodes; i++) {
+                area child_node_area = child(i);
+                if (child_node_area.contains(position)) {
+                    return {child_node_area, i};
+                }
+            }
+            assert(false);
+        }
     };
 
     struct item {
@@ -57,37 +68,51 @@ struct tree {
         node_id node_index;
     };
 
+    constexpr const static node_id INVALID_NODE_ID = 0;
     struct node {
-        node_id parent_node_index;
-        node_id child_nodes_index;
+        node_id parent_node_index = INVALID_NODE_ID;
+        node_id child_nodes_index = INVALID_NODE_ID;
         
         typename std::conditional<
             use_array,
             std::array<item_id, max_items_per_node>,
             std::vector<item_id>
-        >::type items_indices;
+        >::type items_indices {};
     };
 
-    const node_id INVALID_NODE_ID = 0;
-
-    const Coord root_sidelength;
+    constexpr const static size_t root_level = sizeof(Coord) * 8 - 1;
+    //FIXME -1 because we can't express an area that covers the whole universe
     area root_area;
 
     std::vector<node> nodes;
     std::vector<struct item> items;
+    std::unordered_map<your_id, item_id> index;
 
-    tree(Coord root_sidelength_) :
-        root_sidelength(root_sidelength_)
-    {
+private:
+    std::array<std::pair<node_id, area>, root_level + 1> stack;
+    size_t stack_valid_depth = 0;
+public:
+
+    size_t popcount(unsigned t) {
+        return __builtin_popcount(t);
+    }
+    size_t popcount(unsigned long t) {
+        return __builtin_popcountl(t);
+    }
+    size_t popcount(unsigned long long t) {
+        return __builtin_popcountll(t);
+    }
+    tree() {
         root_area.min = {};
-        root_area.max.fill(root_sidelength_);
-        nodes.push_back({INVALID_NODE_ID, INVALID_NODE_ID, {}});
+        root_area.max.fill(Coord{1} << root_level);
+        nodes.push_back({});
+        stack[0] = {INVALID_NODE_ID, root_area};
     }
     void split_node(node_id id, area a) {
-        node n = nodes[id];
+        node& n = nodes[id];
         n.child_nodes_index = nodes.size();
         for (size_t i = 0; i < num_child_nodes; i++) {
-            nodes.push_back({INVALID_NODE_ID, INVALID_NODE_ID, {}});
+            nodes.push_back({});
         }
         assert(id < nodes.size());
         //rebucket items
@@ -106,7 +131,7 @@ struct tree {
             assert(j < num_child_nodes);
         }
         nodes[id].items_indices.clear();
-    };
+    }
     void maybe_merge_child_nodes(node& n) {
         size_t num_items = 0;
         for (size_t i = 0; i < num_child_nodes; i++) {
@@ -122,51 +147,144 @@ struct tree {
             c.~items_indices();
         }
         n.child_node_index = INVALID_NODE_ID;
-    };
-    std::pair<node_id, area> find_node(Position position) {
-        node_id cur_node_id = 0;
-        area cur_node_area = root_area;
-        assert(cur_node_area.contains(position));
-        for (size_t level = 0; ; level++) {
+    }
+    std::optional<item_id> find_item(your_id id) {
+        if (true) {
+            auto search = index.find(id);
+            if (search != index.end()) {
+                return {search->second};
+            } else {
+                return std::nullopt;
+            }
+        } else {
+            for (size_t i = 0; i < items.size(); i++) {
+                if (items[i].id == id) {
+                    return {i};
+                }
+            }
+            return std::nullopt;
+        }
+    }
+    std::pair<node_id, area> find_node(your_id id) {
+        find_item(id);
+    }
+    static size_t msb(unsigned t) {
+        if (t != 0) {
+            return sizeof(t) * 8 - 1 - __builtin_clz(t);
+        } else {
+            return -1;
+        }
+    }
+    static size_t msb(unsigned long t) {
+        if (t != 0) {
+            return sizeof(t) * 8 - 1 - __builtin_clzl(t);
+        } else {
+            return -1;
+        }
+    }
+    static size_t msb(unsigned long long t) {
+        if (t != 0) {
+            return sizeof(t) * 8 - 1 - __builtin_clzll(t);
+        } else {
+            return -1;
+        }
+    }
+    static size_t highest_bit_different(Position a, Position b) {
+        Coord bits = 0;
+        for (size_t i = 0; i < Dimension; i++)
+            bits |= a[i] ^ b[i];
+        return msb(bits);
+    }
+    static bool morton_compare(const Position &a, const Position &b) {
+        size_t bit = highest_bit_different(a, b);
+        if (bit != -1ULL) {
+            bool bit_a_x = (a[0] >> bit) & 1;
+            bool bit_a_y = (a[1] >> bit) & 1;
+            bool bit_b_x = (b[0] >> bit) & 1;
+            bool bit_b_y = (b[1] >> bit) & 1;
+            return bit_a_x < bit_b_x || (bit_a_x == bit_b_x && bit_a_y < bit_b_y);
+        } else {
+            return false;
+        }
+    }
+    size_t depth_to_level(size_t depth) {
+        return root_level - depth;
+    }
+    size_t level_to_depth(size_t level) {
+        return root_level - level;
+    }
+    size_t get_ancestor_depth(Position position) {
+        auto [_, ancestor_area] = stack[stack_valid_depth];
+        size_t b = highest_bit_different(ancestor_area.min, position);
+        size_t level = b != -1ULL ? b + 1 : 0;
+        size_t depth = level_to_depth(level);
+        size_t valid_depth = std::min(depth, stack_valid_depth);
+        size_t check_depth;
+        for (check_depth = 0; check_depth <= stack_valid_depth; check_depth++) {
+            if (!stack[check_depth].second.contains(position)) {
+                break;
+            }
+        }
+        check_depth -= 1;
+        assert(check_depth == valid_depth);
+        assert(stack[valid_depth].second.contains(position));
+        return valid_depth;
+    }
+    std::tuple<node_id, area, size_t> find_node(Position position) {
+        size_t cur_node_id;
+        area cur_node_area;
+        size_t depth;
+        bool use_stack = true;
+        if (use_stack) {
+            depth = get_ancestor_depth(position);
+            std::tie(cur_node_id, cur_node_area) = stack[depth];
+            assert(cur_node_area.contains(position));
+        } else {
+            cur_node_id = 0;
+            cur_node_area = root_area;
+            depth = 0;
+        }
+        while (true) {
             node& n = nodes[cur_node_id];
             if (n.child_nodes_index == INVALID_NODE_ID) {
                 //found leaf
-                return {cur_node_id, cur_node_area};
+                return {cur_node_id, cur_node_area, depth_to_level(depth)};
             } else {
                 //traverse
-                size_t i;
-                for (i = 0; i < num_child_nodes; i++) {
-                    area child_node_area = cur_node_area.child(i);
-                    if (child_node_area.contains(position)) {
-                        node_id child_node_id = n.child_nodes_index + i;
-                        cur_node_id = child_node_id;
-                        cur_node_area = child_node_area;
-                        break;
-                    }
-                }
-                assert(i < num_child_nodes);
+                auto [child_area, child_offset] = cur_node_area.child(position);
+                cur_node_id = n.child_nodes_index + child_offset;
+                cur_node_area = child_area;
+                depth++;
+                stack[depth] = {cur_node_id, cur_node_area};
+                stack_valid_depth = std::max(stack_valid_depth, depth);
             }
         }
-    };
+    }
     item_id insert_item(your_id data, Position position) {
         item_id id = items.size();
         items.push_back({position, data, id});
-        auto p = find_node(position);
-        node& n = nodes[p.first];
+        auto [node_id, node_area, node_level] = find_node(position);
+        node& n = nodes[node_id];
         //found leaf
-        if (n.items_indices.size() >= max_items_per_node) {
-            split_node(p.first, p.second);
-        } else {
+        if (n.items_indices.size() < max_items_per_node || node_level == 0) {
             //insert
             n.items_indices.push_back(id);
+        } else {
+            split_node(node_id, node_area);
         }
         return id;
-    };
+    }
 
     void remove_item(item_id id);
     node& get_node(item_id id);
     std::vector<item&> get_items(node n);
     std::vector<item_id> get_items_within_area(area a);
+
+    void bucket_stats() {
+        for (node& n: nodes) {
+            std::cout << n.items_indices.size() << std::endl;
+        }
+    }
 };
 
 }

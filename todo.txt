@@ -16,3 +16,5 @@ different storage for leaf nodes and internal nodes
 
 1m inserts in 0.88s
 updates could be much faster
+
+benchmark against other kdtrees, rtrees, octrees
