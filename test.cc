@@ -12,20 +12,14 @@ int main() {
 
     {
         std::mt19937_64 rng(0xfeed);
-
-        size_t sidelength = 1024;
-        std::uniform_int_distribution<size_t> uniform_dist(0, sidelength - 1);
-        uniform_dist(rng);
-     
-        std::normal_distribution<> normal_dist(4, 2);
-        normal_dist(rng);
+        std::normal_distribution<float> normal_dist(0, 1024);
      
         size_t n = 1000 * 1000 * 10;
         std::vector<std::pair<uint32_t, decltype(t)::Position>> to_insert;
         for (size_t i = 0; i < n; i++) {
             std::array<size_t, 2> pos = {
-                uniform_dist(rng),
-                uniform_dist(rng)
+                static_cast<size_t>(1024 * 10 + normal_dist(rng)),
+                static_cast<size_t>(1024 * 10 + normal_dist(rng))
             };
             to_insert.push_back({{}, pos});
         }
