@@ -13,6 +13,7 @@ namespace tree {
 
 template<size_t Dimension, typename Coord, typename ID, size_t max_items_per_node = 64, bool use_array = false>
 struct tree {
+private:
     using item_id = uint32_t;
     using node_id = uint32_t;
     using your_id = ID;
@@ -84,7 +85,6 @@ struct tree {
     //FIXME -1 because we can't express an area that covers the whole universe
     area root_area;
 
-private:
     std::vector<node> nodes;
     std::vector<struct item> items;
     std::unordered_map<your_id, item_id> index;
@@ -159,6 +159,7 @@ public:
     std::pair<node_id, area> find_node(your_id id) {
         find_item(id);
     }
+private:
     static size_t msb(unsigned t) {
         if (t != 0) {
             return sizeof(t) * 8 - 1 - __builtin_clz(t);
@@ -186,6 +187,7 @@ public:
             bits |= a[i] ^ b[i];
         return msb(bits);
     }
+public:
     static bool morton_compare(const Position &a, const Position &b) {
         size_t bit = highest_bit_different(a, b);
         if (bit != -1ULL) {
@@ -204,6 +206,7 @@ public:
     size_t level_to_depth(size_t level) {
         return root_level - level;
     }
+private:
     void check_stack() {
         size_t check_depth;
         for (check_depth = 0; check_depth <= stack_valid_depth; check_depth++) {
@@ -233,6 +236,7 @@ public:
         assert(stack[valid_depth].second.contains(position));
         return valid_depth;
     }
+public:
     std::tuple<node_id, area, size_t> find_node(Position position) {
         size_t cur_node_id;
         area cur_node_area;

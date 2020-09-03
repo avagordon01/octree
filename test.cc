@@ -15,7 +15,7 @@ int main() {
         std::normal_distribution<float> normal_dist(0, 1024);
      
         size_t n = 1000 * 1000 * 10;
-        std::vector<std::pair<uint32_t, decltype(t)::Position>> to_insert;
+        std::vector<std::pair<uint32_t, std::array<size_t, 2>>> to_insert;
         for (size_t i = 0; i < n; i++) {
             std::array<size_t, 2> pos = {
                 static_cast<size_t>(1024 * 10 + normal_dist(rng)),
