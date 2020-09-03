@@ -30,8 +30,7 @@ int main() {
                 }
             );
         }
-        t.nodes.reserve(n);
-        t.items.reserve(n);
+        t.reserve(n);
         {
             using time_type = std::chrono::time_point<std::chrono::high_resolution_clock>;
             time_type start_time = std::chrono::high_resolution_clock::now();
@@ -42,7 +41,6 @@ int main() {
             std::chrono::duration<double> diff = stop_time - start_time;
             std::cout << diff.count() << std::endl;
         }
-        assert(t.items.size() == n);
     }
 
     {

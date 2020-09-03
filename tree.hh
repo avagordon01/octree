@@ -84,11 +84,11 @@ struct tree {
     //FIXME -1 because we can't express an area that covers the whole universe
     area root_area;
 
+private:
     std::vector<node> nodes;
     std::vector<struct item> items;
     std::unordered_map<your_id, item_id> index;
 
-private:
     std::array<std::pair<node_id, area>, root_level + 1> stack;
     size_t stack_valid_depth = 0;
 public:
@@ -261,6 +261,10 @@ public:
                 stack_valid_depth = depth;
             }
         }
+    }
+    void reserve(size_t n) {
+        nodes.reserve(n);
+        items.reserve(n);
     }
     item_id insert_item(your_id data, Position position) {
         item_id id = items.size();
