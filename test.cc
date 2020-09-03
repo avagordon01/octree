@@ -10,10 +10,6 @@
 int main() {
     tree::tree<2, size_t, uint32_t> t{};
 
-    assert(t.msb(0ULL) == -1ULL);
-    assert(t.msb(1ULL) == 0);
-    assert(t.msb(2ULL) == 1);
-
     {
         std::mt19937_64 rng(0xfeed);
 
@@ -25,17 +21,20 @@ int main() {
         normal_dist(rng);
      
         size_t n = 1000 * 1000 * 10;
-        std::vector<decltype(t)::Position> to_insert;
+        std::vector<std::pair<uint32_t, decltype(t)::Position>> to_insert;
         for (size_t i = 0; i < n; i++) {
             std::array<size_t, 2> pos = {
                 uniform_dist(rng),
                 uniform_dist(rng)
             };
-            to_insert.push_back(pos);
+            to_insert.push_back({{}, pos});
         }
-        bool morton_sort = true;
-        if (morton_sort) {
-            std::sort(to_insert.begin(), to_insert.end(), decltype(t)::morton_compare);
+        if (true) {
+            std::sort(to_insert.begin(), to_insert.end(),
+                [](const auto& a, const auto& b) -> bool {
+                    return decltype(t)::morton_compare(a.second, b.second);
+                }
+            );
         }
         t.nodes.reserve(n);
         t.items.reserve(n);
@@ -43,7 +42,7 @@ int main() {
             using time_type = std::chrono::time_point<std::chrono::high_resolution_clock>;
             time_type start_time = std::chrono::high_resolution_clock::now();
             for (auto &pos: to_insert) {
-                t.insert_item({}, pos);
+                t.insert_item(pos.first, pos.second);
             }
             time_type stop_time = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = stop_time - start_time;

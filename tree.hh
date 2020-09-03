@@ -237,8 +237,7 @@ public:
         size_t cur_node_id;
         area cur_node_area;
         size_t depth;
-        bool use_stack = true;
-        if (use_stack) {
+        if (true) {
             depth = get_ancestor_depth(position);
             std::tie(cur_node_id, cur_node_area) = stack[depth];
             assert(cur_node_area.contains(position));
