@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <chrono>
 
+#include <Eigen/Dense>
+
 int main() {
     tree::tree<2, size_t, uint32_t> t{};
 
@@ -49,5 +51,47 @@ int main() {
         }
         assert(t.items.size() == n);
     }
+
+    {
+        std::mt19937_64 rng(0xfeed);
+        std::normal_distribution<float> normal_dist(0, 100);
+
+        struct entity {
+            Eigen::Vector2f pos;
+            Eigen::Vector2f target;
+            float max_speed = 4.0;
+        };
+
+        std::vector<struct entity> entities (1000 * 1000);
+
+        for (auto& e: entities) {
+            e.pos = {
+                normal_dist(rng),
+                normal_dist(rng),
+            };
+            e.target = {
+                normal_dist(rng),
+                normal_dist(rng),
+            };
+        }
+
+        for (auto& e: entities) {
+            Eigen::Vector2f direction = (e.target - e.pos);
+            float d = direction.norm();
+            if (d > e.max_speed) {
+                direction = direction / d * e.max_speed;
+            }
+            e.pos += direction;
+
+            if (e.pos == e.target) {
+                e.target = {
+                    normal_dist(rng),
+                    normal_dist(rng),
+                };
+            }
+        }
+
+    }
+
     return 0;
 }

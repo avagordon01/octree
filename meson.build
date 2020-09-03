@@ -10,10 +10,14 @@ project('tree', 'cpp',
 add_global_arguments(
   '-Wno-unused-parameter',
   '-Wno-unused-function',
+  '-Wno-deprecated-copy',
   language: 'cpp'
 )
+
+eigen = dependency('eigen3')
 
 test('test', executable(
   't',
   'test.cc',
+  dependencies: [eigen],
 ))
