@@ -31,7 +31,7 @@ int main() {
             };
             to_insert.push_back(pos);
         }
-        bool morton_sort = false;
+        bool morton_sort = true;
         if (morton_sort) {
             std::sort(to_insert.begin(), to_insert.end(), decltype(t)::morton_compare);
         }

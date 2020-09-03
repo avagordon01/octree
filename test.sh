@@ -3,5 +3,5 @@
 set -eu
 
 meson setup out --reconfigure || meson setup out
-ninja -C out
-gdb -ex run --args ./out/t
+meson install -C out
+./out/t

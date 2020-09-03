@@ -1,7 +1,7 @@
 project('tree', 'cpp',
   default_options: [
     'cpp_std=c++17',
-    'buildtype=debug',
+    'buildtype=debugoptimized',
     'warning_level=3',
     'werror=true',
   ]
@@ -13,8 +13,7 @@ add_global_arguments(
   language: 'cpp'
 )
 
-t = executable(
+test('test', executable(
   't',
   'test.cc',
-)
-test('test', t)
+))

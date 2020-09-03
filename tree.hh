@@ -93,15 +93,6 @@ private:
     size_t stack_valid_depth = 0;
 public:
 
-    size_t popcount(unsigned t) {
-        return __builtin_popcount(t);
-    }
-    size_t popcount(unsigned long t) {
-        return __builtin_popcountl(t);
-    }
-    size_t popcount(unsigned long long t) {
-        return __builtin_popcountll(t);
-    }
     tree() {
         root_area.min = {};
         root_area.max.fill(Coord{1} << root_level);
@@ -213,20 +204,32 @@ public:
     size_t level_to_depth(size_t level) {
         return root_level - level;
     }
+    void check_stack() {
+        size_t check_depth;
+        for (check_depth = 0; check_depth <= stack_valid_depth; check_depth++) {
+            auto area = stack[check_depth].second;
+            Coord size = area.max[0] - area.min[0];
+            for (size_t i = 1; i < Dimension; i++) {
+                assert(area.max[i] - area.min[i] == size);
+            }
+            assert(size == (static_cast<Coord>(1) << depth_to_level(check_depth)));
+        }
+    }
     size_t get_ancestor_depth(Position position) {
         auto [_, ancestor_area] = stack[stack_valid_depth];
         size_t b = highest_bit_different(ancestor_area.min, position);
         size_t level = b != -1ULL ? b + 1 : 0;
         size_t depth = level_to_depth(level);
         size_t valid_depth = std::min(depth, stack_valid_depth);
-        size_t check_depth;
-        for (check_depth = 0; check_depth <= stack_valid_depth; check_depth++) {
-            if (!stack[check_depth].second.contains(position)) {
-                break;
+        if (false) {
+            {
+                size_t expected_size = static_cast<Coord>(1) << depth_to_level(valid_depth);
+                auto area = stack[valid_depth].second;
+                size_t got_size = area.max[0] - area.min[0];
+                assert(got_size == expected_size);
             }
+            check_stack();
         }
-        check_depth -= 1;
-        assert(check_depth == valid_depth);
         assert(stack[valid_depth].second.contains(position));
         return valid_depth;
     }
@@ -256,7 +259,7 @@ public:
                 cur_node_area = child_area;
                 depth++;
                 stack[depth] = {cur_node_id, cur_node_area};
-                stack_valid_depth = std::max(stack_valid_depth, depth);
+                stack_valid_depth = depth;
             }
         }
     }
