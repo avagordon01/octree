@@ -110,8 +110,7 @@ public:
         for (size_t i = 0; i < n.items_indices.size(); i++) {
             item_id id = n.items_indices[i];
             Position pos = items[id].pos;
-            size_t j;
-            for (j = 0; j < num_child_nodes; j++) {
+            for (size_t j = 0; j < num_child_nodes; j++) {
                 area child_node_area = a.child(j);
                 if (child_node_area.contains(pos)) {
                     node& child_node = nodes[n.child_nodes_index + j];
@@ -119,7 +118,6 @@ public:
                     break;
                 }
             }
-            assert(j < num_child_nodes);
         }
         nodes[id].items_indices.clear();
     }
@@ -281,6 +279,14 @@ public:
             n.items_indices.push_back(id);
         } else {
             split_node(node_id, node_area);
+            for (size_t j = 0; j < num_child_nodes; j++) {
+                area child_node_area = node_area.child(j);
+                if (child_node_area.contains(position)) {
+                    node& child_node = nodes[n.child_nodes_index + j];
+                    child_node.items_indices.push_back(id);
+                    break;
+                }
+            }
         }
         return id;
     }
@@ -290,10 +296,12 @@ public:
     std::vector<item&> get_items(node n);
     std::vector<item_id> get_items_within_area(area a);
 
-    void bucket_stats() {
+    void check_items_in_tree() {
+        size_t items_in_tree = 0;
         for (node& n: nodes) {
-            std::cout << n.items_indices.size() << std::endl;
+            items_in_tree += n.items_indices.size();
         }
+        assert(items_in_tree == items.size());
     }
 };
 

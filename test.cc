@@ -41,6 +41,8 @@ int main() {
             std::chrono::duration<double> diff = stop_time - start_time;
             std::cout << diff.count() << std::endl;
         }
+
+        t.check_items_in_tree();
     }
 
     {
