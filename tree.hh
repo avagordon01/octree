@@ -294,6 +294,10 @@ public:
     }
     item_id insert_item(your_id data, InPosition in_position) {
         Position position = transform_in(in_position);
+        if (!root_area.contains(position)) {
+            std::cerr << "warning: cannot insert_item " << data << " with position out of bounds" << std::endl;
+            return -1;
+        }
         item_id id = items.size();
         items.push_back({position, data, id});
         auto [node_id, node_area, node_level] = find_node(position);
