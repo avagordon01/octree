@@ -11,14 +11,28 @@
 
 namespace tree {
 
-template<size_t Dimension, typename Coord, typename ID, size_t max_items_per_node = 64, bool use_array = false>
+template<size_t Dimension, typename InCoord, typename ID, size_t max_items_per_node = 64, bool use_array = false>
 struct tree {
 private:
     using item_id = uint32_t;
     using node_id = uint32_t;
     using your_id = ID;
+    using Coord = typename std::make_unsigned<InCoord>::type;
+    using InPosition = std::array<InCoord, Dimension>;
     using Position = std::array<Coord, Dimension>;
     static constexpr size_t num_child_nodes = 1 << Dimension;
+
+    static Position transform_in(InPosition in) {
+        if constexpr (std::numeric_limits<InCoord>::is_signed) {
+            Position out {};
+            for (size_t i = 0; i < Dimension; i++) {
+                out[i] = static_cast<Coord>(in[i]) + (static_cast<Coord>(1) << (std::numeric_limits<Coord>::digits - 2));
+            }
+            return out;
+        } else {
+            return in;
+        }
+    }
 
     struct area {
         Position min; //inclusive
@@ -81,7 +95,7 @@ private:
         >::type items_indices {};
     };
 
-    constexpr const static size_t root_level = sizeof(Coord) * 8 - 1;
+    constexpr const static size_t root_level = std::numeric_limits<Coord>::digits - 1;
     //FIXME -1 because we can't express an area that covers the whole universe
     area root_area;
 
@@ -186,7 +200,9 @@ private:
         return msb(bits);
     }
 public:
-    static bool morton_compare(const Position &a, const Position &b) {
+    static bool morton_compare(const InPosition &in_a, const InPosition &in_b) {
+        Position a = transform_in(in_a);
+        Position b = transform_in(in_b);
         size_t bit = highest_bit_different(a, b);
         if (bit != -1ULL) {
             bool bit_a_x = (a[0] >> bit) & 1;
@@ -199,10 +215,18 @@ public:
         }
     }
     size_t depth_to_level(size_t depth) {
-        return root_level - depth;
+        if (depth <= root_level) {
+            return root_level - depth;
+        } else {
+            return root_level;
+        }
     }
     size_t level_to_depth(size_t level) {
-        return root_level - level;
+        if (level <= root_level) {
+            return root_level - level;
+        } else {
+            return 0;
+        }
     }
 private:
     void check_stack() {
@@ -268,7 +292,8 @@ public:
         nodes.reserve(n);
         items.reserve(n);
     }
-    item_id insert_item(your_id data, Position position) {
+    item_id insert_item(your_id data, InPosition in_position) {
+        Position position = transform_in(in_position);
         item_id id = items.size();
         items.push_back({position, data, id});
         auto [node_id, node_area, node_level] = find_node(position);

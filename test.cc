@@ -8,18 +8,19 @@
 #include <Eigen/Dense>
 
 int main() {
-    tree::tree<2, size_t, uint32_t> t{};
+    using coord = int64_t;
+    tree::tree<2, coord, uint32_t> t{};
 
     {
         std::mt19937_64 rng(0xfeed);
         std::normal_distribution<float> normal_dist(0, 1024);
      
         size_t n = 1000 * 1000 * 10;
-        std::vector<std::pair<uint32_t, std::array<size_t, 2>>> to_insert;
+        std::vector<std::pair<uint32_t, std::array<coord, 2>>> to_insert;
         for (size_t i = 0; i < n; i++) {
-            std::array<size_t, 2> pos = {
-                static_cast<size_t>(1024 * 10 + normal_dist(rng)),
-                static_cast<size_t>(1024 * 10 + normal_dist(rng))
+            std::array<coord, 2> pos = {
+                static_cast<coord>(normal_dist(rng)),
+                static_cast<coord>(normal_dist(rng))
             };
             to_insert.push_back({{}, pos});
         }
