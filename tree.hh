@@ -215,18 +215,12 @@ public:
         }
     }
     size_t depth_to_level(size_t depth) {
-        if (depth <= root_level) {
-            return root_level - depth;
-        } else {
-            return root_level;
-        }
+        assert(depth <= root_level);
+        return root_level - depth;
     }
     size_t level_to_depth(size_t level) {
-        if (level <= root_level) {
-            return root_level - level;
-        } else {
-            return 0;
-        }
+        assert(level <= root_level);
+        return root_level - level;
     }
 private:
     void check_stack() {
