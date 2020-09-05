@@ -204,15 +204,15 @@ public:
         Position a = transform_in(in_a);
         Position b = transform_in(in_b);
         size_t bit = highest_bit_different(a, b);
-        if (bit != -1ULL) {
-            bool bit_a_x = (a[0] >> bit) & 1;
-            bool bit_a_y = (a[1] >> bit) & 1;
-            bool bit_b_x = (b[0] >> bit) & 1;
-            bool bit_b_y = (b[1] >> bit) & 1;
-            return bit_a_x < bit_b_x || (bit_a_x == bit_b_x && bit_a_y < bit_b_y);
-        } else {
-            return false;
+        size_t bits_a = 0;
+        size_t bits_b = 0;
+        for (size_t i = 0; i < Dimension; i++) {
+            bits_a <<= 1;
+            bits_b <<= 1;
+            bits_a |= (a[i] >> bit) & 1;
+            bits_b |= (b[i] >> bit) & 1;
         }
+        return bits_a < bits_b;
     }
     size_t depth_to_level(size_t depth) {
         assert(depth <= root_level);
