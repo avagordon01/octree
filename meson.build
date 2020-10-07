@@ -21,3 +21,9 @@ test('tree-test', executable(
   'tree-test.cc',
   dependencies: [eigen],
 ))
+
+test('list-test', executable(
+  'list-test',
+  'list-test.cc',
+  dependencies: [eigen],
+))

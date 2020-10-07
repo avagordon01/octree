@@ -1,3 +1,11 @@
+Entities Morton sorted spatial index
+Unordered map with user ID -> index in spatial map
+Sort operation needs to be careful and update both
+
+entities morton sorted in a vector
+binary search to find by position
+cache the binary search queries in a stack
+
 support both
     fixed minimum node size
     fixed maximum node size
