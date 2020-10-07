@@ -66,6 +66,19 @@ struct list {
         return bits_a < bits_b;
     }
 
+    void insert_items(std::vector<item>& is) {
+        auto comp = [](const auto& a, const auto& b) -> bool {
+            return morton_compare(a.pos, b.pos);
+        };
+        std::sort(is.begin(), is.end(), comp);
+        auto middle = items.end();
+        items.insert(
+            items.end(),
+            std::make_move_iterator(is.begin()),
+            std::make_move_iterator(is.end())
+        );
+        std::inplace_merge(items.begin(), middle, items.end(), comp);
+    }
     void insert_item(your_id data, Position position) {
         items.push_back(std::move(item{position, data}));
         std::sort(items.begin(), items.end(),
