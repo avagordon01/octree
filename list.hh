@@ -65,27 +65,23 @@ struct list {
         }
         return bits_a < bits_b;
     }
+    static bool morton_compare2(const item& a, const item& b) {
+        return morton_compare(a.pos, b.pos);
+    }
 
     void insert_items(std::vector<item>& is) {
-        auto comp = [](const auto& a, const auto& b) -> bool {
-            return morton_compare(a.pos, b.pos);
-        };
-        std::sort(is.begin(), is.end(), comp);
+        std::sort(is.begin(), is.end(), morton_compare2);
         auto middle = items.end();
         items.insert(
             items.end(),
             std::make_move_iterator(is.begin()),
             std::make_move_iterator(is.end())
         );
-        std::inplace_merge(items.begin(), middle, items.end(), comp);
+        std::inplace_merge(items.begin(), middle, items.end(), morton_compare2);
     }
     void insert_item(your_id data, Position position) {
         items.push_back(std::move(item{position, data}));
-        std::sort(items.begin(), items.end(),
-            [](const auto& a, const auto& b) -> bool {
-                return morton_compare(a.pos, b.pos);
-            }
-        );
+        std::sort(items.begin(), items.end(), morton_compare2);
     }
 
     std::optional<Position> find_item(your_id data) {
@@ -99,11 +95,7 @@ struct list {
 
     std::optional<your_id> find_item(Position position) {
         if (!items.empty()) {
-            auto search = std::lower_bound(items.begin(), items.end(),
-                [](const auto& a, const auto& b) -> bool {
-                    return morton_compare(a.pos, b.pos);
-                }
-            );
+            auto search = std::lower_bound(items.begin(), items.end(), morton_compare2);
             if (search->pos == position) {
                 return {search->id};
             }
