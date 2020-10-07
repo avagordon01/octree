@@ -16,8 +16,8 @@ add_global_arguments(
 
 eigen = dependency('eigen3')
 
-test('test', executable(
-  't',
-  'test.cc',
+test('tree-test', executable(
+  'tree-test',
+  'tree-test.cc',
   dependencies: [eigen],
 ))
