@@ -174,21 +174,21 @@ public:
 private:
     static size_t msb(unsigned t) {
         if (t != 0) {
-            return sizeof(t) * 8 - 1 - __builtin_clz(t);
+            return std::numeric_limits<decltype(t)>::digits - 1 - __builtin_clz(t);
         } else {
             return -1;
         }
     }
     static size_t msb(unsigned long t) {
         if (t != 0) {
-            return sizeof(t) * 8 - 1 - __builtin_clzl(t);
+            return std::numeric_limits<decltype(t)>::digits - 1 - __builtin_clzl(t);
         } else {
             return -1;
         }
     }
     static size_t msb(unsigned long long t) {
         if (t != 0) {
-            return sizeof(t) * 8 - 1 - __builtin_clzll(t);
+            return std::numeric_limits<decltype(t)>::digits - 1 - __builtin_clzll(t);
         } else {
             return -1;
         }
