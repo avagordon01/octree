@@ -18,12 +18,14 @@ eigen = dependency('eigen3')
 
 test('tree-test', executable(
   'tree-test',
-  'tree-test.cc',
+  'test.cc',
   dependencies: [eigen],
+  cpp_args: ['-DRUN=0'],
 ))
 
 test('list-test', executable(
   'list-test',
-  'list-test.cc',
+  'test.cc',
   dependencies: [eigen],
+  cpp_args: ['-DRUN=1'],
 ))

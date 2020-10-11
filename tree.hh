@@ -8,20 +8,21 @@
 #include <type_traits>
 #include <ostream>
 #include <iostream>
+#include <algorithm>
 
 namespace tree {
 
-template<size_t Dimension, typename InCoord, typename ID, size_t max_items_per_node = 64, bool use_array = false>
+template<size_t Dimension, typename Coord, typename ID, size_t max_items_per_node = 64, bool use_array = false>
 struct tree {
 private:
     using item_id = uint32_t;
     using node_id = uint32_t;
     using your_id = ID;
-    using Coord = typename std::make_unsigned<InCoord>::type;
-    using InPosition = std::array<InCoord, Dimension>;
     using Position = std::array<Coord, Dimension>;
     static constexpr size_t num_child_nodes = 1 << Dimension;
 
+    using InCoord = typename std::make_signed<Coord>::type;
+    using InPosition = std::array<InCoord, Dimension>;
     static Position transform_in(InPosition in) {
         if constexpr (std::numeric_limits<InCoord>::is_signed) {
             Position out {};
@@ -77,11 +78,13 @@ private:
         }
     };
 
+public:
     struct item {
         Position pos;
         your_id id;
         node_id node_index;
     };
+private:
 
     constexpr const static node_id INVALID_NODE_ID = 0;
     struct node {
@@ -200,9 +203,7 @@ private:
         return msb(bits);
     }
 public:
-    static bool morton_compare(const InPosition &in_a, const InPosition &in_b) {
-        Position a = transform_in(in_a);
-        Position b = transform_in(in_b);
+    static bool morton_compare(const Position &a, const Position &b) {
         size_t bit = highest_bit_different(a, b);
         size_t bits_a = 0;
         size_t bits_b = 0;
@@ -286,8 +287,17 @@ public:
         nodes.reserve(n);
         items.reserve(n);
     }
-    item_id insert_item(your_id data, InPosition in_position) {
-        Position position = transform_in(in_position);
+    void insert_items(std::vector<item>& is) {
+        std::sort(is.begin(), is.end(),
+            [](const auto& a, const auto& b) -> bool {
+                return morton_compare(a.pos, b.pos);
+            }
+        );
+        for (auto& i: is) {
+            insert_item(i.id, i.pos);
+        }
+    }
+    item_id insert_item(your_id data, Position position) {
         if (!root_area.contains(position)) {
             std::cerr << "warning: cannot insert_item " << data << " with position out of bounds" << std::endl;
             return -1;
@@ -319,7 +329,7 @@ public:
     std::vector<item&> get_items(node n);
     std::vector<item_id> get_items_within_area(area a);
 
-    void check_items_in_tree() {
+    void post_insert_check() {
         size_t items_in_tree = 0;
         for (node& n: nodes) {
             items_in_tree += n.items_indices.size();

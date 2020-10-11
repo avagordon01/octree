@@ -102,6 +102,9 @@ struct list {
         }
         return std::nullopt;
     }
+
+    void post_insert_check() {
+    }
 };
 
 }
