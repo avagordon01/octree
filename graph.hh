@@ -2,10 +2,10 @@
 #include <optional>
 #include <algorithm>
 
-namespace list {
+namespace graph {
 
 template<size_t Dimension, typename Coord, typename ID>
-struct list {
+struct graph {
     using item_id = size_t;
     using your_id = ID;
     using Position = std::array<Coord, Dimension>;

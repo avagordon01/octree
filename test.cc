@@ -1,15 +1,15 @@
-#if RUN == 0
-#include "tree.hh"
-#elif RUN == 1
-#include "list.hh"
-#endif
-
 #include <random>
 #include <iostream>
 #include <algorithm>
 #include <chrono>
 
 #include <Eigen/Dense>
+
+#if RUN == 0
+#include "tree.hh"
+#elif RUN == 1
+#include "list.hh"
+#endif
 
 int main() {
     using coord = uint64_t;
@@ -21,14 +21,14 @@ int main() {
 
     {
         std::mt19937_64 rng(0xfeed);
-        std::normal_distribution<float> normal_dist(0, 1024);
+        std::normal_distribution<float> normal_dist(1000000, 1024);
      
-        size_t n = 1000 * 1000 * 10;
+        size_t n = 1000;
         std::vector<decltype(s)::item> to_insert;
         for (size_t i = 0; i < n; i++) {
             std::array<coord, 2> pos = {
-                static_cast<coord>(normal_dist(rng)),
-                static_cast<coord>(normal_dist(rng))
+                static_cast<coord>(std::max(0.0f, normal_dist(rng))),
+                static_cast<coord>(std::max(0.0f, normal_dist(rng)))
             };
             decltype(s)::item it{};
             it.pos = pos;

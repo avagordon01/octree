@@ -3,4 +3,4 @@
 set -eu
 
 meson setup out --reconfigure || meson setup out
-meson test -C out --print-errorlogs
+meson test -C out --print-errorlogs --gdb

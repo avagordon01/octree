@@ -117,26 +117,27 @@ public:
         stack[0] = {INVALID_NODE_ID, root_area};
     }
     void split_node(node_id id, area a) {
-        node& n = nodes[id];
-        n.child_nodes_index = nodes.size();
+        node& parent = nodes[id];
+        parent.child_nodes_index = nodes.size();
         for (size_t i = 0; i < num_child_nodes; i++) {
             nodes.push_back({});
         }
+        parent = nodes[id];
         assert(id < nodes.size());
         //rebucket items
-        for (size_t i = 0; i < n.items_indices.size(); i++) {
-            item_id id = n.items_indices[i];
-            Position pos = items[id].pos;
+        for (size_t i = 0; i < parent.items_indices.size(); i++) {
+            item_id id_ = parent.items_indices[i];
+            Position pos = items[id_].pos;
             for (size_t j = 0; j < num_child_nodes; j++) {
                 area child_node_area = a.child(j);
                 if (child_node_area.contains(pos)) {
-                    node& child_node = nodes[n.child_nodes_index + j];
-                    child_node.items_indices.push_back(id);
+                    node& child_node = nodes[parent.child_nodes_index + j];
+                    child_node.items_indices.push_back(id_);
                     break;
                 }
             }
         }
-        nodes[id].items_indices.clear();
+        parent.items_indices.clear();
     }
     void maybe_merge_child_nodes(node& n) {
         size_t num_items = 0;
@@ -312,6 +313,7 @@ public:
             n.items_indices.push_back(id);
         } else {
             split_node(node_id, node_area);
+            n = nodes[node_id];
             for (size_t j = 0; j < num_child_nodes; j++) {
                 area child_node_area = node_area.child(j);
                 if (child_node_area.contains(position)) {

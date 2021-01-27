@@ -1,7 +1,7 @@
 project('tree', 'cpp',
   default_options: [
     'cpp_std=c++17',
-    'buildtype=debugoptimized',
+    'buildtype=debug',
     'warning_level=3',
     'werror=true',
   ]
