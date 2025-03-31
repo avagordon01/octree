@@ -2,6 +2,11 @@ simple fast implementation
 
 want to look up by position and by id
 
+spatial index AND id index
+two parallel indexes, keep them in sync
+handle/reference stability guarantees?
+    what inserts/moves will invalidate handles?
+
 octree  items   your data
 node_id item_id your_id
 

@@ -26,3 +26,6 @@ different storage for leaf nodes and internal nodes
 updates could be much faster
 
 benchmark against other kdtrees, rtrees, octrees
+
+std::vector<std::reference_wrapper<>>??
+alternative to std::vector<ID> but with better ergonomics?
